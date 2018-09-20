@@ -1,0 +1,263 @@
+basePath: /api
+consumes:
+- application/json
+definitions:
+  TaskPayload:
+    example:
+      done: false
+      title: example task title
+    properties:
+      done:
+        default: false
+        description: タスクの完了状態
+        example: false
+        type: boolean
+      title:
+        description: タスクのタイトル
+        example: example task title
+        maxLength: 128
+        minLength: 2
+        type: string
+    required:
+    - title
+    title: TaskPayload
+    type: object
+  X-Learning-Goa:
+    description: タスク (default view)
+    example:
+      created_at: "1979-07-06T11:49:46Z"
+      done: true
+      id: 12345
+      title: my task
+      updated_at: "2010-06-14T16:29:12Z"
+    properties:
+      created_at:
+        description: タスクの作成日時
+        example: "1979-07-06T11:49:46Z"
+        format: date-time
+        type: string
+      done:
+        description: タスクの完了状態
+        example: true
+        type: boolean
+      id:
+        description: タスクID
+        example: 12345
+        format: int64
+        type: integer
+      title:
+        description: タスクのタイトル
+        example: my task
+        type: string
+      updated_at:
+        description: タスクの更新日時
+        example: "2010-06-14T16:29:12Z"
+        format: date-time
+        type: string
+    required:
+    - id
+    - title
+    - done
+    - created_at
+    - updated_at
+    title: 'Mediatype identifier: application/x-learning-goa+json; view=default'
+    type: object
+  X-Learning-GoaCollection:
+    description: X-Learning-GoaCollection is the media type for an array of X-Learning-Goa
+      (default view)
+    example:
+    - created_at: "1979-07-06T11:49:46Z"
+      done: true
+      id: 12345
+      title: my task
+      updated_at: "2010-06-14T16:29:12Z"
+    items:
+      $ref: '#/definitions/X-Learning-Goa'
+    title: 'Mediatype identifier: application/x-learning-goa+json; type=collection;
+      view=default'
+    type: array
+  error:
+    description: Error response media type (default view)
+    example:
+      code: invalid_value
+      detail: Value of ID must be an integer
+      id: 3F1FKVRR
+      meta:
+        timestamp: 1.458609066e+09
+      status: "400"
+    properties:
+      code:
+        description: an application-specific error code, expressed as a string value.
+        example: invalid_value
+        type: string
+      detail:
+        description: a human-readable explanation specific to this occurrence of the
+          problem.
+        example: Value of ID must be an integer
+        type: string
+      id:
+        description: a unique identifier for this particular occurrence of the problem.
+        example: 3F1FKVRR
+        type: string
+      meta:
+        additionalProperties: true
+        description: a meta object containing non-standard meta-information about
+          the error.
+        example:
+          timestamp: 1.458609066e+09
+        type: object
+      status:
+        description: the HTTP status code applicable to this problem, expressed as
+          a string value.
+        example: "400"
+        type: string
+    title: 'Mediatype identifier: application/vnd.goa.error; view=default'
+    type: object
+host: localhost:8080
+info:
+  description: タスク管理のAPIです。
+  title: タスク管理API
+  version: "0.1"
+paths:
+  /tasks:
+    get:
+      description: タスク一覧を取得する。
+      operationId: Tasks#list
+      produces:
+      - application/x-learning-goa+json; type=collection
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/X-Learning-GoaCollection'
+      schemes:
+      - http
+      summary: list Tasks
+      tags:
+      - Tasks
+    post:
+      description: タスクを作成する。
+      operationId: Tasks#create
+      parameters:
+      - in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/TaskPayload'
+      produces:
+      - application/vnd.goa.error
+      responses:
+        "201":
+          description: タスク作成が完了しました。
+          headers:
+            Location:
+              description: 作成したタスクのリンク
+              pattern: /tasks/[0-9]+
+              type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/error'
+      schemes:
+      - http
+      summary: create Tasks
+      tags:
+      - Tasks
+  /tasks/{taskID}:
+    delete:
+      description: 指定IDのタスクを削除する。
+      operationId: Tasks#delete
+      parameters:
+      - description: タスクID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      produces:
+      - application/vnd.goa.error
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/error'
+        "404":
+          description: Not Found
+      schemes:
+      - http
+      summary: delete Tasks
+      tags:
+      - Tasks
+    get:
+      description: 指定IDのタスクを取得する。
+      operationId: Tasks#show
+      parameters:
+      - description: タスクID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      produces:
+      - application/vnd.goa.error
+      - application/x-learning-goa+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/X-Learning-Goa'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/error'
+        "404":
+          description: Not Found
+      schemes:
+      - http
+      summary: show Tasks
+      tags:
+      - Tasks
+    post:
+      description: 指定IDのタスクを更新する。
+      operationId: Tasks#update
+      parameters:
+      - description: タスクID
+        in: path
+        name: taskID
+        required: true
+        type: integer
+      - in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/TaskPayload'
+      produces:
+      - application/vnd.goa.error
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/error'
+        "404":
+          description: Not Found
+      schemes:
+      - http
+      summary: update Tasks
+      tags:
+      - Tasks
+produces:
+- application/json
+responses:
+  NoContent:
+    description: No Content
+  NotFound:
+    description: Not Found
+  OK:
+    description: OK
+    schema:
+      $ref: '#/definitions/X-Learning-Goa'
+schemes:
+- http
+swagger: "2.0"
